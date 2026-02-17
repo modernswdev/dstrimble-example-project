@@ -41,10 +41,41 @@
     return h('div', {}, username, password, btn);
   }
 
-  function Dashboard({onLogout, user}){
-    const p = h('p', {}, 'Hello ' + user.username);
+  function Widgets({onLogout}){
+    const container = h('div', { style: { padding: '10px' } });
+    const title = h('h2', {}, 'Widgets');
+    const list = h('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } });
     const btn = h('button', { onClick: onLogout }, 'Logout');
-    return h('div', {}, p, btn);
+    container.appendChild(title);
+    container.appendChild(btn);
+    container.appendChild(list);
+
+    async function load(){
+      list.innerHTML = 'Loading...';
+      const res = await fetch('/api/widgets');
+      if (!res.ok){
+        list.innerHTML = 'Failed to load widgets';
+        return;
+      }
+      const widgets = await res.json();
+      list.innerHTML = '';
+      widgets.forEach(w => {
+        const card = h('div', { style: { border: '1px solid #ccc', padding: '10px', width: '180px', borderRadius: '4px' } },
+          h('h3', {}, w.name),
+          h('p', {}, w.description || ''),
+          h('p', {}, '$' + parseFloat(w.price).toFixed(2))
+        );
+        list.appendChild(card);
+      });
+    }
+
+    load();
+    return container;
+  }
+
+  function Dashboard({onLogout, user}){
+    // Show widgets screen after login
+    return Widgets({ onLogout });
   }
 
   async function App(){
