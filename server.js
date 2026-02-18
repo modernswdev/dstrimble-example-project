@@ -9,18 +9,47 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Postgres pool - configured from environment with sensible defaults for Docker Compose
-const pool = new Pool({
-  host: process.env.POSTGRES_HOST || 'db',
-  port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT) : 5432,
-  user: process.env.POSTGRES_USER || 'example',
-  password: process.env.POSTGRES_PASSWORD || 'example',
-  database: process.env.POSTGRES_DB || 'exampledb',
-});
+let pool;
+if (process.env.NODE_ENV === 'test') {
+  // In-memory fake pool for tests to avoid needing a Postgres instance
+  const seededUsers = [ { id: 1, username: 'admin', password: process.env.DEFAULT_ADMIN_PASSWORD || 'password' } ];
+  const seededWidgets = [
+    { id: 1, name: 'Widget A', description: 'A basic widget', price: '9.99' },
+    { id: 2, name: 'Widget B', description: 'An advanced widget', price: '19.99' },
+    { id: 3, name: 'Widget C', description: 'A premium widget', price: '29.99' }
+  ];
+  pool = {
+    query: async (text, params) => {
+      const sql = (text || '').toLowerCase();
+      if (sql.includes('select * from users') && params && params.length >= 2) {
+        const [username, password] = params;
+        const found = seededUsers.filter(u => u.username === username && u.password === password);
+        return { rows: found };
+      }
+      if (sql.includes('select id, name, description, price from widgets')) {
+        return { rows: seededWidgets };
+      }
+      // Fallback: return empty
+      return { rows: [] };
+    },
+    connect: async () => ({ query: async () => {}, release: () => {} })
+  };
+} else {
+  pool = new Pool({
+    host: process.env.POSTGRES_HOST || 'db',
+    port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT) : 5432,
+    user: process.env.POSTGRES_USER || 'example',
+    password: process.env.POSTGRES_PASSWORD || 'example',
+    database: process.env.POSTGRES_DB || 'exampledb',
+  });
+}
 
 // Initialize DB: create users table and insert default user if not exists
 const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || 'password';
 
 async function initDb(){
+  if (process.env.NODE_ENV === 'test') return; // skip real DB init during tests
+
   const client = await pool.connect();
   try{
     await client.query(`CREATE TABLE IF NOT EXISTS users (
@@ -68,6 +97,7 @@ async function initDb(){
 
 initDb();
 
+// API endpoints
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try{
@@ -109,4 +139,8 @@ app.get('/api/widgets', async (req, res) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+}
+
+module.exports = app;
