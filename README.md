@@ -1,6 +1,6 @@
 # dstrimble-example-project
 
-S imple Node.js app with a minimal React-like front end and cookie-based login.
+Simple Node.js app with a minimal React-like front end and cookie-based login.
 
 ## Team Members
 
