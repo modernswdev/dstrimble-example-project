@@ -45,6 +45,22 @@ Provide a minimal, easy-to-run example showing how to wire a server and client t
 
 Note: the app can be pointed at a local Postgres instance by setting the standard POSTGRES_* environment variables (see Docker section for defaults used in docker-compose).
 
+## Testing
+
+Install dependencies first:
+
+npm install
+
+Run all tests:
+
+npm test
+
+Run specific suites:
+
+- Unit tests: `npm run test:unit`
+- Integration tests: `npm run test:integration`
+- UI tests: `npm run test:ui`
+
 ## Database (Postgres)
 
 This project includes optional Postgres integration. The server uses `pg` and will create a simple `users` table on startup if it does not already exist.

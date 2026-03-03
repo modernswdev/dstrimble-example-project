@@ -2,11 +2,13 @@ name: CI
 
 on:
   push:
+    branches: [ "**" ]
+  pull_request:
     branches: [ main ]
 
 jobs:
-  build:
-    name: Build on merge to main
+  tests:
+    name: Unit, Integration, and UI Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -29,11 +31,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
+      - name: Run unit tests
+        run: npm run test:unit
 
-      - name: Build Docker image
-        run: docker build -t dstrimble-example-project:${{ github.sha }} .
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Run UI tests
+        run: npm run test:ui
 
       - name: Success
-        run: echo "Build job finished successfully."
+        run: echo "All test suites passed."
