@@ -1,3 +1,4 @@
+//Setup tests
 const {
   AUTH_TOKEN,
   hasValidAuthToken,
@@ -5,7 +6,10 @@ const {
   hasLoginFields,
 } = require('../lib/auth-utils');
 
+
 describe('auth-utils unit tests', () => {
+   
+  // Tests for different failure types
   test('hasValidAuthToken returns true only for the expected auth token', () => {
     expect(hasValidAuthToken(AUTH_TOKEN)).toBe(true);
     expect(hasValidAuthToken('wrong-token')).toBe(false);
@@ -13,6 +17,7 @@ describe('auth-utils unit tests', () => {
     expect(hasValidAuthToken(null)).toBe(false);
   });
 
+   // Tests for functionality 
   test('normalizeCredentials trims username and preserves password value', () => {
     expect(normalizeCredentials({ username: '  admin  ', password: 'password' })).toEqual({
       username: 'admin',
@@ -30,7 +35,7 @@ describe('auth-utils unit tests', () => {
     });
   });
 
-  test('hasLoginFields enforces non-empty username and password', () => {
+   test('hasLoginFields enforces non-empty username and password', () => {
     expect(hasLoginFields({ username: 'admin', password: 'password' })).toBe(true);
     expect(hasLoginFields({ username: '   ', password: 'password' })).toBe(false);
     expect(hasLoginFields({ username: 'admin', password: '' })).toBe(false);
