@@ -24,6 +24,12 @@ describe('Basic API tests', () => {
     expect(res.statusCode).toBe(401);
   });
 
+  test('GET /api/widgets returns 401 when unauthenticated', async () => {
+    const res = await request(app).get('/api/widgets');
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toEqual({ error: 'unauthorized' });
+  });
+
   test('POST /api/login with correct creds sets cookie and GET /api/widgets fails without cookie', async () => {
     const loginRes = await request(app)
       .post('/api/login')
