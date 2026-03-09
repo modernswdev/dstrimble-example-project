@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const { Pool } = require('pg');
+const { AUTH_TOKEN, hasValidAuthToken } = require('./lib/auth-utils');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -103,7 +104,7 @@ app.post('/api/login', async (req, res) => {
   try{
     const { rows } = await pool.query('SELECT * FROM users WHERE username=$1 AND password=$2', [username, password]);
     if (rows.length > 0){
-      res.cookie('token', 'fake-jwt-token', { httpOnly: true });
+      res.cookie('token', AUTH_TOKEN, { httpOnly: true });
       return res.json({ ok: true });
     }
     res.status(401).json({ ok: false });
@@ -119,7 +120,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/me', (req, res) => {
-  if (req.cookies.token === 'fake-jwt-token') {
+  if (hasValidAuthToken(req.cookies.token)) {
     return res.json({ username: 'admin' });
   }
   res.status(401).json({ error: 'unauthorized' });
@@ -127,7 +128,7 @@ app.get('/api/me', (req, res) => {
 
 // API to return widgets (requires the same simple cookie-based auth)
 app.get('/api/widgets', async (req, res) => {
-  if (req.cookies.token !== 'fake-jwt-token') return res.status(401).json({ error: 'unauthorized' });
+  if (!hasValidAuthToken(req.cookies.token)) return res.status(401).json({ error: 'unauthorized' });
   try{
     const { rows } = await pool.query('SELECT id, name, description, price FROM widgets ORDER BY id');
     res.json(rows);
