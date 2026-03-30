@@ -25,5 +25,6 @@ describe('search-utils unit tests', () => {
           searchQuery: ''
       });
   });
+  
 
 });
